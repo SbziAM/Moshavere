@@ -1,11 +1,32 @@
 <?php
-$question = 'این یک پرسش نمونه است';
-$msg = 'این یک پاسخ نمونه است';
-$en_name = 'hafez';
-$fa_name = 'حافظ';
+$sz = sizeof($_POST);
+$json = file_get_contents("people.json"); 
+$arr = json_decode($json , true);
+$arrk = array_keys( $arr );
+$arrv = array_values( $arr );
+$myfile = "messages.txt";
+$fmsg = file($myfile);
+$szmsg = sizeof( $fmsg );
+
+if( $sz > 0 ){
+    $question = $_POST["question"];
+    $en_name = $_POST["person"];
+    $fa_name = $arr[$en_name];     
+    $mi = $question . $en_name ;
+    $va = crc32( md5( $mi , true ) );
+    $ind = $va % $szmsg;
+    $msg = $fmsg[ $ind ]; 
+}
+else{
+ $question = '...';
+ $msg = 'سوال خود را بپرس!';
+ $ind = array_rand( $arrk );
+ $en_name = $arrk[$ind]; 
+ $fa_name = $arrv[$ind];
+}
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en/fa">
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="styles/default.css">
@@ -14,9 +35,13 @@ $fa_name = 'حافظ';
 <body>
 <p id="copyright">تهیه شده برای درس کارگاه کامپیوتر،دانشکده کامییوتر، دانشگاه صنعتی شریف</p>
 <div id="wrapper">
-    <div id="title">
-        <span id="label">پرسش:</span>
-        <span id="question"><?php echo $question ?></span>
+    <div id="title">    
+      <?php 
+       if( $sz > 0 ){  
+        echo "<span id=\"label\">پرسش:</span>";
+         echo "<span id=\"question\"> $question </span>" ; 
+       }
+      ?>
     </div>
     <div id="container">
         <div id="message">
@@ -32,15 +57,20 @@ $fa_name = 'حافظ';
     <div id="new-q">
         <form method="post">
             سوال
-            <input type="text" name="question" value="<?php echo $question ?>" maxlength="150" placeholder="..."/>
-            را از
+            <?php 
+             if( $sz == 0 )echo "<input type=\"text\" name=\"question\" maxlength=\"150\" placeholder=\"...\"/>" ;
+             else echo "<input type=\"text\" name=\"question\" maxlength=\"150\" value=\"$question\" />" ; 
+            ?> 
+             را از
             <select name="person">
                 <?php
-                /*
-                 * Loop over people data and
-                 * enter data inside `option` tag.
-                 * E.g., <option value="hafez">حافظ</option>
-                 */
+                 echo "<option value=\"$en_name\"> $fa_name </option>";                    
+                 foreach ( $arrk as $ename ) {
+                   if( $ename != $en_name ){   
+                     $fname = $arr[$ename] ;
+                     echo "<option value=\"$ename\"> $fname </option>";                    
+                   }
+                 }   
                 ?>
             </select>
             <input type="submit" value="بپرس"/>
